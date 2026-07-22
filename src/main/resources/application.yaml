@@ -1,3 +1,6 @@
 spring:
   application:
-    name: practice
+    name: image-service
+server:
+  # Render injects PORT (default 10000); fall back to 8080 locally.
+  port: '${PORT:8080}'
