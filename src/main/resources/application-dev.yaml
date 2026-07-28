@@ -1,7 +1,7 @@
-spring:
-  datasource:
-    url: 'jdbc:postgresql://localhost:5432/mydb'
-    username: 'admin'
-    password: 'password'
-server:
-  port: '8080'
+# Local development. The datasource is inherited from application.yaml (whose
+# defaults match compose.yaml); on `./mvnw spring-boot:run`, spring-boot-docker-compose
+# starts compose.yaml and wires Postgres in via @ServiceConnection.
+logging:
+  level:
+    root: DEBUG
+    org.springframework.jdbc.core: DEBUG

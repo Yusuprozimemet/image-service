@@ -1,4 +1,4 @@
-package hackyourfuture.net.practice;
+package hackyourfuture.net.imageservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,14 +12,14 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 // DataSourceAutoConfiguration gets a real datasource — no exclude needed.
 @SpringBootTest
 @Testcontainers
-class PracticeApplicationTests {
+class ImageServiceApplicationTests {
 
-	@Container
-	@ServiceConnection
-	static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }

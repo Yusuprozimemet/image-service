@@ -1,6 +1,12 @@
 spring:
   application:
     name: image-service
+  datasource:
+    # Names match .env / compose.yaml. The defaults let the app boot locally
+    # without a .env; env vars (or the docker-compose ServiceConnection) override.
+    url: '${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/imagedb}'
+    username: '${SPRING_DATASOURCE_USERNAME:dev}'
+    password: '${SPRING_DATASOURCE_PASSWORD:dev}'
 server:
   # Render injects PORT (default 10000); fall back to 8080 locally.
   port: '${PORT:8080}'

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Logging configuration.
+
+  The console appender is Spring Boot's own: it honours logging.structured.format
+  (ECS JSON in prod, human-readable everywhere else) and the per-package levels
+  set in the profile YAMLs, so nothing here changes day-to-day console output.
+
+  In production we ALSO ship logs to Grafana Loki. Every connection detail comes
+  from an environment variable (see .env / your host's config), so no secret is
+  committed. The Loki appender lives inside a `prod` springProfile block, so dev,
+  tests and CI never load it and never open a network connection.
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <springProfile name="prod">
+        <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+            <!-- `level` is a label (low cardinality) so Grafana can count errors
+                 over time, e.g. count_over_time({app="image-service",level="ERROR"}[5m]). -->
+            <labels>
+                app = image-service
+                level = %level
+            </labels>
+            <structuredMetadata>
+                logger = %logger
+                thread = %thread
+            </structuredMetadata>
+            <message>
+                <pattern>%-5level %logger{36} - %msg%n</pattern>
+            </message>
+            <http>
+                <url>${LOKI_URL}/loki/api/v1/push</url>
+                <auth>
+                    <username>${LOKI_USERNAME}</username>
+                    <password>${LOKI_API_TOKEN}</password>
+                </auth>
+                <requestTimeoutMs>15000</requestTimeoutMs>
+            </http>
+            <!-- Grafana Cloud caps a push at 64 KB. -->
+            <batch>
+                <maxBytes>65536</maxBytes>
+            </batch>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="LOKI"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+</configuration>
