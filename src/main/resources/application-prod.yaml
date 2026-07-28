@@ -1,14 +1,13 @@
-spring:
-  datasource:
-    # e.g: jdbc:postgresql://server:5432/mydb
-    url: '${DB_URL}'
-    username: '${DB_USER}'
-    password: '${DB_PASSWORD}'
-server:
-  port: '${PORT:8080}'
+# Production. Secrets never live here — they arrive as env vars
+# (SPRING_DATASOURCE_URL/USERNAME/PASSWORD, bound by application.yaml).
+#
+# Logs are emitted as ECS JSON on the console: once a machine (Loki/Grafana),
+# not a human at a terminal, is reading them, structured fields beat prose.
 logging:
   level:
     root: INFO
+    org.springframework.web: WARN
+    org.apache.catalina: WARN
   structured:
     format:
       console: ecs
