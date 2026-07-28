@@ -19,5 +19,10 @@ jobs:
         java-version: '25'
         distribution: 'temurin'
 
+    # Fast static-analysis gate. Runs before the tests so a style violation
+    # fails the build quickly, without waiting for the (slower) test suite.
+    - name: Lint (Checkstyle)
+      run: ./mvnw checkstyle:check --batch-mode
+
     - name: Build and test with Maven
       run: ./mvnw clean package --batch-mode
