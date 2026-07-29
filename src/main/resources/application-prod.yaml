@@ -1,6 +1,12 @@
 # Production. Secrets never live here — they arrive as env vars
 # (SPRING_DATASOURCE_URL/USERNAME/PASSWORD, bound by application.yaml).
-#
+
+# Production serves over HTTPS, so the session cookie must be Secure
+# (browsers then send it only over HTTPS). Defaults to false for local http dev.
+app:
+  session:
+    cookie-secure: true
+
 # Logs are emitted as ECS JSON on the console: once a machine (Loki/Grafana),
 # not a human at a terminal, is reading them, structured fields beat prose.
 logging:
