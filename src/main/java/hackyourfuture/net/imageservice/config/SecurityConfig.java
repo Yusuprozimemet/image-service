@@ -28,6 +28,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        // Public image reads: home page (50), search, and the raw-bytes proxy.
+                        // Note /api/images/mine stays authenticated (falls through to below).
+                        .requestMatchers(HttpMethod.GET, "/api/images", "/api/images/search", "/api/images/*/raw")
+                        .permitAll()
                         // Swagger UI and the OpenAPI JSON, so the docs are reachable without a session.
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
