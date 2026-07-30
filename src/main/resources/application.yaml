@@ -1,12 +1,32 @@
 spring:
   application:
     name: image-service
+  servlet:
+    multipart:
+      # A bit above our own 10 MB check.
+      max-file-size: 11MB
+      max-request-size: 12MB
   datasource:
-    # Names match .env / compose.yaml. The defaults let the app boot locally
-    # without a .env; env vars (or the docker-compose ServiceConnection) override.
+    # Defaults let the app run locally; env vars override.
     url: '${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/imagedb}'
     username: '${SPRING_DATASOURCE_USERNAME:dev}'
     password: '${SPRING_DATASOURCE_PASSWORD:dev}'
 server:
-  # Render injects PORT (default 10000); fall back to 8080 locally.
+  # Use PORT if set, else 8080.
   port: '${PORT:8080}'
+app:
+  b2:
+    # Backblaze B2 storage. Keys/bucket come from env vars; unset is fine
+    # (storage just won't work until they're set).
+    endpoint: '${B2_ENDPOINT:https://s3.us-west-004.backblazeb2.com}'
+    region: '${B2_REGION:us-west-004}'
+    bucket: '${B2_BUCKET:}'
+    access-key: '${B2_ACCESS_KEY:}'
+    secret-key: '${B2_SECRET_KEY:}'
+  gemini:
+    # Gemini, used to tag images. Key comes from an env var; unset is fine
+    # (tagging just won't work until it's set).
+    api-key: '${LLM_API_KEY:}'
+    # Alias for Google's current flash model.
+    model: '${GEMINI_MODEL:gemini-flash-latest}'
+    base-url: '${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}'

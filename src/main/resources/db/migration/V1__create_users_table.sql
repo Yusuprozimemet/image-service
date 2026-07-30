@@ -1,4 +1,4 @@
--- Application users. Passwords are stored only as a bcrypt hash, never in plain text.
+-- Users. Passwords are stored as a bcrypt hash only.
 CREATE TABLE users (
     user_id       SERIAL      PRIMARY KEY,
     email         TEXT        NOT NULL UNIQUE,

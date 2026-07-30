@@ -22,9 +22,8 @@ import hackyourfuture.net.imageservice.image.model.Image;
 import hackyourfuture.net.imageservice.image.model.RawImage;
 import hackyourfuture.net.imageservice.image.service.ImageService;
 
-// Image endpoints. Uploading, listing your own images and deleting them require a
-// session; the home page, search and the raw-bytes proxy are public. The
-// authenticated user id is the principal set by SessionAuthFilter.
+// Image endpoints. Upload, my images, and delete need login; home, search, and
+// raw are public.
 @RestController
 @RequestMapping("/api/images")
 public class ImageController {
@@ -35,7 +34,7 @@ public class ImageController {
         this.images = images;
     }
 
-    // Upload one image (multipart form field "file"). Auth required.
+    // Upload one image. Login required.
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UploadResponse upload(@AuthenticationPrincipal Integer userId,
@@ -43,33 +42,32 @@ public class ImageController {
         return UploadResponse.from(images.upload(userId, file));
     }
 
-    // List the authenticated user's own images. Auth required.
+    // List my images. Login required.
     @GetMapping("/mine")
     public List<ImageResponse> mine(@AuthenticationPrincipal Integer userId) {
         return toResponses(images.listMine(userId));
     }
 
-    // Delete an image the caller owns. Auth required.
+    // Delete my image. Login required.
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@AuthenticationPrincipal Integer userId, @PathVariable("id") int id) {
         images.delete(userId, id);
     }
 
-    // Home page: the 50 most recent images. Public.
+    // Home: the 50 newest images. Public.
     @GetMapping
     public List<ImageResponse> home() {
         return toResponses(images.listRecent());
     }
 
-    // Keyword search over the AI tags. Public.
+    // Search by tag. Public.
     @GetMapping("/search")
     public List<ImageResponse> search(@RequestParam("q") String q) {
         return toResponses(images.search(q));
     }
 
-    // Proxy the raw image bytes from the private bucket so they display in a
-    // browser. Public — this is the image's direct URL.
+    // Serve the raw image bytes. Public — this is the image's URL.
     @GetMapping("/{id}/raw")
     public ResponseEntity<byte[]> raw(@PathVariable("id") int id) {
         RawImage raw = images.getRaw(id);

@@ -14,8 +14,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import hackyourfuture.net.imageservice.auth.security.SessionAuthFilter;
 
-// Stateless security: no Spring login page, no server session. Authentication is
-// our own opaque token, checked by SessionAuthFilter on each request.
+// Security setup. No Spring login page; we check our own session cookie in
+// SessionAuthFilter on each request.
 @Configuration
 public class SecurityConfig {
 
@@ -23,19 +23,19 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, SessionAuthFilter sessionAuthFilter)
             throws Exception {
         http
-                // No browser sessions or CSRF tokens: this is a token-based API.
+                // No server sessions or CSRF; auth is the session cookie.
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-                        // Public image reads: home page (50), search, and the raw-bytes proxy.
-                        // Note /api/images/mine stays authenticated (falls through to below).
+                        // Public image reads: home, search, and the raw image.
+                        // (/api/images/mine stays private.)
                         .requestMatchers(HttpMethod.GET, "/api/images", "/api/images/search", "/api/images/*/raw")
                         .permitAll()
-                        // Swagger UI and the OpenAPI JSON, so the docs are reachable without a session.
+                        // Swagger docs are public.
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
-                // Missing/invalid token -> 401 (Spring's default here would be 403).
+                // No or bad session -> 401.
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(sessionAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .httpBasic(basic -> basic.disable())

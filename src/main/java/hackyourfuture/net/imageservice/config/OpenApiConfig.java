@@ -10,9 +10,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
-// Metadata for the generated Swagger UI (reachable at /swagger-ui.html).
-// Documents the session-cookie scheme: log in via POST /api/auth/login, then the
-// browser sends the HttpOnly cookie automatically on later "Try it out" calls.
+// Swagger UI settings. Documents the session cookie so "Try it out" works after login.
 @Configuration
 public class OpenApiConfig {
 

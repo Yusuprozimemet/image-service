@@ -16,12 +16,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import hackyourfuture.net.imageservice.auth.service.SessionService;
 
-// Runs on every request: if there is a session cookie whose id maps to a valid
-// session, marks the request as authenticated with the user id as the principal.
+// Runs on every request. If the session cookie is valid, marks the request as
+// logged in (the user id becomes the principal).
 @Component
 public class SessionAuthFilter extends OncePerRequestFilter {
 
-    // Name of the HttpOnly cookie that carries the opaque session id.
+    // Name of the session cookie.
     public static final String SESSION_COOKIE = "session";
 
     private final SessionService sessions;
@@ -55,9 +55,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         return null;
     }
 
-    // Also run on the ERROR dispatch (e.g. a 404 forwarded to /error). Otherwise an
-    // authenticated request to a missing route loses its auth on the re-dispatch and
-    // comes back as a misleading 401 instead of 404.
+    // Also run on error responses, so a missing route returns 404, not 401.
     @Override
     protected boolean shouldNotFilterErrorDispatch() {
         return false;

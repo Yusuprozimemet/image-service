@@ -24,14 +24,14 @@ import hackyourfuture.net.imageservice.auth.security.SessionAuthFilter;
 import hackyourfuture.net.imageservice.auth.service.AuthService;
 import hackyourfuture.net.imageservice.auth.service.SessionService;
 
-// Registration, login and logout endpoints. The session id travels in an HttpOnly cookie.
+// Register, login, and logout. The session id is kept in a cookie.
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService auth;
 
-    // Secure cookies (HTTPS only). False for local dev over http, true in production.
+    // Send the cookie only over HTTPS. Off for local dev, on in production.
     private final boolean cookieSecure;
 
     public AuthController(AuthService auth, @Value("${app.session.cookie-secure:false}") boolean cookieSecure) {
@@ -61,15 +61,15 @@ public class AuthController {
         if (sessionId != null) {
             auth.logout(sessionId);
         }
-        // Expire the cookie on the client too, whether or not it was a known session.
+        // Clear the cookie in the browser.
         response.addHeader(HttpHeaders.SET_COOKIE, buildSessionCookie("", Duration.ZERO).toString());
     }
 
     private ResponseCookie buildSessionCookie(String value, Duration maxAge) {
         return ResponseCookie.from(SessionAuthFilter.SESSION_COOKIE, value)
-                .httpOnly(true)          // not readable by JavaScript (mitigates XSS token theft)
-                .secure(cookieSecure)    // only sent over HTTPS in production
-                .sameSite("Strict")      // not sent on cross-site requests (mitigates CSRF)
+                .httpOnly(true)          // JavaScript can't read it
+                .secure(cookieSecure)    // HTTPS only in production
+                .sameSite("Strict")      // not sent on cross-site requests
                 .path("/")
                 .maxAge(maxAge)
                 .build();
