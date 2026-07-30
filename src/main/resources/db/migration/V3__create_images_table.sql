@@ -1,11 +1,10 @@
--- Uploaded images. The bytes live in object storage (Backblaze B2); this table
--- holds only the metadata and the AI-generated tags.
+-- Uploaded images. Bytes live in Backblaze B2; this table holds metadata + tags.
 CREATE TABLE images (
     image_id     SERIAL      PRIMARY KEY,
     user_id      INTEGER     NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
     object_key   TEXT        NOT NULL,              -- key of the image in the bucket
     content_type TEXT        NOT NULL,              -- used when the proxy serves the bytes
-    -- Tagging lifecycle: PENDING -> DONE, or FAILED after retries.
+    -- PENDING -> DONE, or FAILED.
     status       TEXT        NOT NULL DEFAULT 'PENDING'
                  CHECK (status IN ('PENDING', 'DONE', 'FAILED')),
     -- AI tags: { "objects": [...], "tags": [...], "colors": [...] }
@@ -13,7 +12,7 @@ CREATE TABLE images (
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Keyword search matches against the JSONB tag arrays.
+-- For tag search.
 CREATE INDEX idx_images_tags ON images USING gin (tags);
 
 -- "My images" listing.

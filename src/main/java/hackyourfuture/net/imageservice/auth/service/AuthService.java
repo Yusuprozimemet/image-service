@@ -32,8 +32,7 @@ public class AuthService {
 
     // Verifies the password and returns a fresh session id.
     public String login(String email, String rawPassword) {
-        // Same error for unknown email and wrong password, so we don't reveal
-        // which emails are registered.
+        // Same error for wrong email or password, so we don't reveal which emails exist.
         User user = users.findByEmail(email)
                 .filter(u -> passwordEncoder.matches(rawPassword, u.passwordHash()))
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "invalid email or password"));

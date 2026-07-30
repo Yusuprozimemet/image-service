@@ -28,7 +28,7 @@ public class UserRepository {
                 .optional();
     }
 
-    // Inserts a new user and returns it with the generated id.
+    // Insert a user and return it with its new id.
     public User insert(String email, String passwordHash) {
         return jdbc.sql("""
                         INSERT INTO users (email, password_hash)

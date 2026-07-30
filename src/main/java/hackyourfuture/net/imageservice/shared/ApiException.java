@@ -2,8 +2,7 @@ package hackyourfuture.net.imageservice.shared;
 
 import org.springframework.http.HttpStatus;
 
-// A business error we want to turn into a specific HTTP status and message.
-// Thrown by services and translated to JSON by GlobalExceptionHandler.
+// An error with an HTTP status and message. GlobalExceptionHandler turns it into JSON.
 public class ApiException extends RuntimeException {
 
     private final HttpStatus status;

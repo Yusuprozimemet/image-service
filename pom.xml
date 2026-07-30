@@ -28,7 +28,22 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
+		<aws.sdk.version>2.31.11</aws.sdk.version>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- AWS SDK v2 BOM keeps the s3 + http-client versions aligned. -->
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>${aws.sdk.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -50,6 +65,16 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+		<!-- Backblaze B2 is S3-compatible, so we talk to it with the AWS S3 SDK.
+		     apache-client is the sync HTTP client the S3Client uses. -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>apache-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

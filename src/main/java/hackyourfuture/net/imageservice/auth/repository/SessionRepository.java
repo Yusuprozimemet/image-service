@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
-// Reads and writes the sessions table, keyed by the opaque session id.
+// Reads and writes the sessions table.
 @Repository
 public class SessionRepository {
 
@@ -22,7 +22,7 @@ public class SessionRepository {
                 .update();
     }
 
-    // Returns the owning user id if a matching, non-expired session exists.
+    // Return the user id if the session exists and hasn't expired.
     public Optional<Integer> findUserId(String sessionId, Instant now) {
         return jdbc.sql("SELECT user_id FROM sessions WHERE session_id = ? AND expires_at > ?")
                 .params(sessionId, java.sql.Timestamp.from(now))
