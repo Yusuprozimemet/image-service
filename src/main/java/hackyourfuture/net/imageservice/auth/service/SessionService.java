@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import hackyourfuture.net.imageservice.auth.repository.SessionRepository;
@@ -15,21 +16,28 @@ import hackyourfuture.net.imageservice.auth.repository.SessionRepository;
 @Service
 public class SessionService {
 
-    // How long a session lasts.
-    public static final Duration SESSION_TTL = Duration.ofDays(7);
-
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final SessionRepository sessions;
 
-    public SessionService(SessionRepository sessions) {
+    // How long a session lasts, from app.session.ttl-days (APP_SESSION_TTL_DAYS).
+    private final Duration sessionTtl;
+
+    public SessionService(SessionRepository sessions, @Value("${app.session.ttl-days}") int ttlDays) {
         this.sessions = sessions;
+        this.sessionTtl = Duration.ofDays(ttlDays);
+    }
+
+    // The stored expiry and the cookie's Max-Age have to agree, so the controller
+    // reads the lifetime from here rather than keeping its own copy.
+    public Duration sessionTtl() {
+        return sessionTtl;
     }
 
     // Make a session and return its id.
     public String createSession(int userId) {
         String sessionId = generateId();
-        sessions.insert(sessionId, userId, Instant.now().plus(SESSION_TTL));
+        sessions.insert(sessionId, userId, Instant.now().plus(sessionTtl));
         return sessionId;
     }
 

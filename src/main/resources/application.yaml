@@ -33,6 +33,10 @@ server:
   # Use PORT if set, else 8080.
   port: '${PORT:8080}'
 app:
+  session:
+    # How long a login lasts: both the expiry stored with the session row and the
+    # cookie's Max-Age. Override with APP_SESSION_TTL_DAYS.
+    ttl-days: '${APP_SESSION_TTL_DAYS:7}'
   b2:
     # Backblaze B2 storage. Keys/bucket come from env vars; unset is fine
     # (storage just won't work until they're set).

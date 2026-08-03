@@ -1,5 +1,7 @@
 package hackyourfuture.net.imageservice.auth.service;
 
+import java.time.Duration;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -42,5 +44,19 @@ public class AuthService {
     // Ends the given session.
     public void logout(String sessionId) {
         sessions.deleteSession(sessionId);
+    }
+
+    // The logged-in user, for /api/auth/me. The session cookie is HttpOnly, so
+    // the browser cannot read it — this is how the frontend restores the session
+    // on a page load. The id comes from an already-validated session, so a
+    // missing row means the account was deleted mid-session.
+    public User currentUser(int userId) {
+        return users.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "session no longer valid"));
+    }
+
+    // How long a session lasts, so the cookie can be given the same Max-Age.
+    public Duration sessionTtl() {
+        return sessions.sessionTtl();
     }
 }
