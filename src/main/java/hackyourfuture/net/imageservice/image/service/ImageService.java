@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +22,8 @@ import hackyourfuture.net.imageservice.tagging.service.TaggingService;
 @Service
 public class ImageService {
 
+    private static final Logger log = LoggerFactory.getLogger(ImageService.class);
+
     // Max image size: 10 MB.
     private static final long MAX_BYTES = 10L * 1024 * 1024;
 
@@ -33,7 +38,8 @@ public class ImageService {
     }
 
     // Check size and that it's really an image, store it, save a PENDING row, then
-    // tag it. Tagging runs now and never fails the upload (on error the row is FAILED).
+    // hand it to the tagging pool. Tagging runs in the background, so the upload
+    // returns as soon as the bytes are stored — the row is still PENDING at that point.
     public Image upload(int userId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "no file uploaded");
@@ -50,8 +56,19 @@ public class ImageService {
         String objectKey = "images/" + UUID.randomUUID() + extensionFor(contentType);
         files.put(objectKey, bytes, contentType);
         Image image = images.insert(userId, objectKey, contentType);
-        tagging.tag(image.imageId());
+        requestTagging(image.imageId());
         return image;
+    }
+
+    // Queue the image for tagging. The upload is already stored and committed at
+    // this point, so a saturated pool must not turn it into an error — the image
+    // just stays PENDING and untagged.
+    private void requestTagging(int imageId) {
+        try {
+            tagging.tag(imageId);
+        } catch (TaskRejectedException e) {
+            log.warn("tagging queue is full, image {} left PENDING", imageId);
+        }
     }
 
     // All images owned by the given user, newest first.

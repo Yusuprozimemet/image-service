@@ -11,6 +11,24 @@ spring:
     url: '${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/imagedb}'
     username: '${SPRING_DATASOURCE_USERNAME:dev}'
     password: '${SPRING_DATASOURCE_PASSWORD:dev}'
+  task:
+    execution:
+      # The @Async pool that runs AI tagging (see AsyncConfig).
+      pool:
+        # Tagging is one slow HTTPS call, so concurrency is limited by Gemini's
+        # rate limit, not by CPU. core-size is the real concurrency: the pool only
+        # grows towards max-size once the queue is full.
+        core-size: 2
+        max-size: 4
+        # Absorbs upload bursts. When this fills too, ImageService logs and leaves
+        # the image PENDING rather than failing an upload that already succeeded.
+        queue-capacity: 100
+      # Makes tagging work obvious in the logs, next to the http-nio- threads.
+      thread-name-prefix: tagging-
+      shutdown:
+        # Let tagging in flight finish on shutdown instead of stranding rows at PENDING.
+        await-termination: true
+        await-termination-period: 30s
 server:
   # Use PORT if set, else 8080.
   port: '${PORT:8080}'
