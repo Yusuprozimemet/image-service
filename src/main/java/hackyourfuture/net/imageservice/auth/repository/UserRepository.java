@@ -28,6 +28,13 @@ public class UserRepository {
                 .optional();
     }
 
+    public Optional<User> findById(int userId) {
+        return jdbc.sql("SELECT user_id, email, password_hash FROM users WHERE user_id = ?")
+                .param(userId)
+                .query(ROW_MAPPER)
+                .optional();
+    }
+
     // Insert a user and return it with its new id.
     public User insert(String email, String passwordHash) {
         return jdbc.sql("""

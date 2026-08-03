@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +24,6 @@ import hackyourfuture.net.imageservice.auth.dto.UserResponse;
 import hackyourfuture.net.imageservice.auth.model.User;
 import hackyourfuture.net.imageservice.auth.security.SessionAuthFilter;
 import hackyourfuture.net.imageservice.auth.service.AuthService;
-import hackyourfuture.net.imageservice.auth.service.SessionService;
 
 // Register, login, and logout. The session id is kept in a cookie.
 @RestController
@@ -50,8 +51,16 @@ public class AuthController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         String sessionId = auth.login(request.email(), request.password());
-        ResponseCookie cookie = buildSessionCookie(sessionId, SessionService.SESSION_TTL);
+        ResponseCookie cookie = buildSessionCookie(sessionId, auth.sessionTtl());
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    // Who am I? Login required, so a 401 here is how the frontend learns it is
+    // logged out.
+    @GetMapping("/me")
+    public UserResponse me(@AuthenticationPrincipal Integer userId) {
+        User user = auth.currentUser(userId);
+        return new UserResponse(user.userId(), user.email());
     }
 
     @PostMapping("/logout")
