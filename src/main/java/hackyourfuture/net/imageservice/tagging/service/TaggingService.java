@@ -2,6 +2,7 @@ package hackyourfuture.net.imageservice.tagging.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import hackyourfuture.net.imageservice.image.model.Image;
@@ -11,6 +12,7 @@ import hackyourfuture.net.imageservice.image.service.FileService;
 import hackyourfuture.net.imageservice.tagging.client.LlmClient;
 
 // Tags one image: get its bytes, ask the LLM, save the tags and set DONE (or FAILED).
+// Runs on a background thread — see AsyncConfig.
 @Service
 public class TaggingService {
 
@@ -30,8 +32,10 @@ public class TaggingService {
         this.llm = llm;
     }
 
-    // Tag the image. Only runs if it's still PENDING. Sets DONE on success,
-    // FAILED on error.
+    // Tag the image. Called from the upload request but runs on a tagging thread,
+    // so the caller returns immediately and never waits for the LLM. Only runs if
+    // the image is still PENDING. Sets DONE on success, FAILED on error.
+    @Async
     public void tag(int imageId) {
         Image image = images.findById(imageId).orElse(null);
         if (image == null || !PENDING.equals(image.status())) {
