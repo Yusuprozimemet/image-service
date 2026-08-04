@@ -1,4 +1,7 @@
 target/
+# The build runs `npm ci` itself, from the lockfile.
+frontend/node_modules/
+frontend/dist/
 .git/
 .github/
 .idea/

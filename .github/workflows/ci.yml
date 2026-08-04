@@ -24,5 +24,7 @@ jobs:
     - name: Lint (Checkstyle)
       run: ./mvnw checkstyle:check --batch-mode
 
+    # npm.install.command=ci installs the lockfile exactly, so CI cannot drift
+    # from what was committed. Local builds default to `install` instead.
     - name: Build and test with Maven
-      run: ./mvnw clean package --batch-mode
+      run: ./mvnw clean package --batch-mode -Dnpm.install.command=ci

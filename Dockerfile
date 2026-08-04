@@ -2,7 +2,10 @@
 FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /app
 COPY . .
-RUN mvn package -DskipTests
+# npm.install.command=ci: a clean, byte-exact install from the lockfile. The
+# default (`install`) exists for local builds, where keeping node_modules in
+# place matters more.
+RUN mvn package -DskipTests -Dnpm.install.command=ci
 
 # Stage 2: run the JAR (JRE is enough)
 FROM eclipse-temurin:25-jre
