@@ -29,6 +29,20 @@
 	<properties>
 		<java.version>25</java.version>
 		<aws.sdk.version>2.31.11</aws.sdk.version>
+		<!-- Node for the frontend build. Downloaded into target/ by
+		     frontend-maven-plugin, so nothing has to be installed to build this.
+		     Keep it at or above what frontend/package.json's dependencies ask for
+		     (react-router wants >=22.22.0) — npm only warns on a mismatch. -->
+		<node.version>v24.15.0</node.version>
+		<!-- -DskipFrontend=true skips npm entirely. Worth it when you are only
+		     touching Java, or running the Vite dev server alongside. -->
+		<skipFrontend>false</skipFrontend>
+		<!-- How the build installs frontend deps. `install` locally: it is a fast
+		     no-op when node_modules already matches the lockfile, and it leaves the
+		     directory in place — `ci` deletes and recreates it, which throws away
+		     the IDE's TypeScript index on every build. CI and Docker override this
+		     with `ci`, where a byte-exact install matters more than speed. -->
+		<npm.install.command>install</npm.install.command>
 	</properties>
 
 	<dependencyManagement>
@@ -172,6 +186,83 @@
 					<failOnViolation>true</failOnViolation>
 					<includeTestSourceDirectory>true</includeTestSourceDirectory>
 				</configuration>
+			</plugin>
+			<!-- Builds the React app in frontend/ as part of the normal Maven
+			     build, so `mvn package` produces one JAR that serves both the API
+			     and the UI. That is not a packaging preference: the session cookie
+			     is SameSite=Strict, so the browser only sends it when the app and
+			     the API are the same origin. -->
+			<plugin>
+				<groupId>com.github.eirslett</groupId>
+				<artifactId>frontend-maven-plugin</artifactId>
+				<version>1.15.1</version>
+				<configuration>
+					<workingDirectory>frontend</workingDirectory>
+					<installDirectory>target</installDirectory>
+					<skip>${skipFrontend}</skip>
+				</configuration>
+				<executions>
+					<!-- All three bind to generate-resources, ahead of the copy below.
+					     `<?m2e ignore?>` keeps Eclipse's auto-build out of them: a
+					     workspace build would otherwise re-run `npm ci` on every save,
+					     which is slow and — because `npm ci` empties node_modules —
+					     breaks any command-line build running at the same time. The
+					     frontend is built by `mvn` on the command line and in CI. -->
+					<execution>
+						<id>install-node-and-npm</id>
+						<?m2e ignore?>
+						<goals>
+							<goal>install-node-and-npm</goal>
+						</goals>
+						<configuration>
+							<nodeVersion>${node.version}</nodeVersion>
+						</configuration>
+					</execution>
+					<execution>
+						<id>npm-install</id>
+						<?m2e ignore?>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>${npm.install.command}</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>npm-build</id>
+						<?m2e ignore?>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>run build</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Moves the built bundle onto the classpath under /static, where
+			     SpaConfig serves it from. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-frontend-bundle</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<skip>${skipFrontend}</skip>
+							<outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+							<resources>
+								<resource>
+									<directory>frontend/dist</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

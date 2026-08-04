@@ -32,8 +32,14 @@ public class SecurityConfig {
                         // (/api/images/mine stays private.)
                         .requestMatchers(HttpMethod.GET, "/api/images", "/api/images/search", "/api/images/*/raw")
                         .permitAll()
-                        // Swagger docs are public.
-                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // Everything else under /api needs a session. This rule comes
+                        // before the static one below, so the frontend can never open
+                        // up an API route by accident.
+                        .requestMatchers("/api/**").authenticated()
+                        // The React bundle, its client-side routes and the Swagger docs.
+                        // All public: it is a JS app served to anonymous visitors, and
+                        // every piece of data it shows still comes from /api above.
+                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
                         .anyRequest().authenticated())
                 // No or bad session -> 401.
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
